@@ -1,51 +1,131 @@
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <string>
+//class String
+//{
+//public:
+//    void PrintLn() {
+//        for (int i=0; i<len; i++)
+//            printf("%c",m_Str[i]);
+//        printf("\n");
+//    }
+//
+//    String(const char* str) {
+//        printf("Created\n");
+//        len = strlen(str);
+//        m_Str = new char[len];
+//        strcpy(m_Str,str);
+//    }
+//
+//    String& operator=(String other) {
+//        printf("Copy operator\n");
+//        len = other.len;
+//        strcpy(m_Str,other.m_Str);
+//        return *this;
+//    }
+//
+//    String(const String& str) {
+//        printf("Copy created\n");
+//        len = str.len;
+//        m_Str = new char[len];
+//        strcpy(m_Str,str.m_Str);
+//    }
+//
+//    ~String() {
+//        delete[] m_Str;
+//    }
+//private:
+//    char* m_Str;
+//    size_t len;
+//};
+//
+//int main() {
+//    std::vector<String> v;
+//    v.reserve(50);
+//    for (int i=0; i<5; i++) {
+//        char tmp[10];
+//        sprintf(tmp,"%d",i);
+//        v.emplace_back(String(tmp));
+//    }
+//    printf("--------------------\n");
+//
+//    for (auto& a : v) {
+//        a.PrintLn();
+//    }
+//}
 
-void DatePlusDays( struct tm* date, int days )
+#include "bits/stdc++.h"
+#include "stdio.h"
+#include <ctime>
+
+// Return if year is leap year or not.
+bool isLeap(int y)
 {
-    bool b = false;
-    const time_t ONE_DAY = 24 * 60 * 60 ;
-    if (date->tm_mon==12) b = true;
+    if (y%100 != 0 && y%4 == 0 || y %400 == 0)
+        return true;
 
-    time_t date_seconds = mktime( date ) + (days * ONE_DAY) ;
-
-    *date = *localtime( &date_seconds ) ;
-    if (b) date->tm_mon=12;
+    return false;
 }
 
-std::string modificareData(const char* str) {
-    int d,m,y;
-    sscanf(str,"%d/%d/%d",&d,&m,&y);
+// Given a date, returns number of days elapsed
+// from the  beginning of the current year (1st
+// jan).
+int offsetDays(int d, int m, int y)
+{
+    int offset = d;
 
-    struct tm date = { 0, 0, 0 } ;
+    switch (m - 1)
+    {
+        case 11:
+            offset += 30;
+        case 10:
+            offset += 31;
+        case 9:
+            offset += 30;
+        case 8:
+            offset += 31;
+        case 7:
+            offset += 31;
+        case 6:
+            offset += 30;
+        case 5:
+            offset += 31;
+        case 4:
+            offset += 30;
+        case 3:
+            offset += 31;
+        case 2:
+            offset += 28;
+        case 1:
+            offset += 31;
+    }
 
-    date.tm_year = y;
-    date.tm_mon = m;
-    date.tm_mday = d;
+    if (isLeap(y) && m > 2)
+        offset += 1;
 
-    DatePlusDays( &date, 5 ) ;
-
-    char out[50];
-    sprintf(out, "%d-%d-%d",date.tm_mday,date.tm_mon,date.tm_year);
-    return std::string(out);
+    return offset;
 }
 
-std::string modificareData(int zi, int luna, int an) {
-    struct tm date = { 0, 0, 0 } ;
+// Given a year and days elapsed in it, finds
+// date by storing results in d and m.
+void revoffsetDays(int offset, int y, int *d, int *m)
+{
+    int month[13] = { 0, 31, 28, 31, 30, 31, 30,
+                      31, 31, 30, 31, 30, 31 };
 
-    date.tm_year = an;
-    date.tm_mon = luna;
-    date.tm_mday = zi;
+    if (isLeap(y))
+        month[2] = 29;
 
-    DatePlusDays( &date, 5 ) ;
+    int i;
+    for (i = 1; i <= 12; i++)
+    {
+        if (offset <= month[i])
+            break;
+        offset = offset - month[i];
+    }
 
-    char out[50];
-    sprintf(out, "%d-%d-%d",date.tm_mday,date.tm_mon,date.tm_year);
-    return std::string(out);
+    *d = offset;
+    *m = i;
 }
 
+//problema worthless si bullshit
 int mtm(const std::string& m) {
     if (m=="ianuarie") return 1;
     if (m=="februarie") return 2;
@@ -62,18 +142,50 @@ int mtm(const std::string& m) {
     return 0;
 }
 
-std::string modificareData(const std::string& luna, int day, int year) {
-    struct tm date = { 0, 0, 0 } ;
+struct dmy {
+    dmy(int d, int m, int y) : d(d), m(m), y(y) {}
+    int d,m,y;
+};
 
-    date.tm_year = year;
-    date.tm_mon = mtm(luna);
-    date.tm_mday = day;
+// Add x days to the given date.
+dmy addDays(int d, int m, int y, int x)
+{
+    int offset1 = offsetDays(d, m, y);
+    int remDays = isLeap(y) ? (366 - offset1) : (365 - offset1);
 
-    DatePlusDays( &date, 5 ) ;
+    // _y is going to store result year and
+    // offset2 is going to store offset days
+    // in result year.
+    int _y, offset2;
+    if (x <= remDays)
+    {
+        _y = y;
+        offset2 = offset1 + x;
+    }
 
-    char out[50];
-    sprintf(out, "%d-%d-%d",date.tm_mday,date.tm_mon,date.tm_year);
-    return std::string(out);
+    else
+    {
+        // x may store thousands of days.
+        // We find correct year and offset
+        // in the year.
+        x -= remDays;
+        _y = y + 1;
+        int _d = isLeap(_y) ? 366 : 365;
+        while (x >= _d)
+        {
+            x -= _d;
+            _y++;
+            _d = isLeap(_y) ? 366 : 365;
+        }
+        offset2 = x;
+    }
+
+    // Find values of day and month from
+    // offset of result year.
+    int _m, _d;
+    revoffsetDays(offset2, _y, &_d, &_m);
+
+    return dmy(_d,_m,_y);
 }
 
 std::vector<std::string> split (const std::string &s, char delim) {
@@ -89,15 +201,17 @@ std::vector<std::string> split (const std::string &s, char delim) {
 }
 
 int main() {
-    std::string input;
-    getline(std::cin,input);
-    std::cout << modificareData(input.c_str()) << std::endl;
-    getline(std::cin,input);
-    auto out = split(input,' ');
-
-    size_t i = 0;
     int d,m,y;
+    char str[100];
+    std::cin.getline(str,100);
+    sscanf(str,"%d/%d/%d",&d,&m,&y);
+    dmy output = addDays(d,m,y,5);
+    printf("%d-%d-%d\n",output.m,output.d,output.y);
+
+    std::cin.getline(str,100);
+    auto out = split(str,' ');
     std::string copy;
+    size_t i=0;
     for (auto& v : out) {
         i++;
         switch (i) {
@@ -114,10 +228,10 @@ int main() {
                 break;
         }
     }
-    std::cout << modificareData(copy, d,  y) << std::endl;
-
-
-    scanf("%d %d %d",&d,&m,&y);
-    std::cout << modificareData(d, m, y);
+    output = addDays(d,mtm(copy),y,5);
+    printf("%d-%d-%d\n",output.m,output.d,output.y);
+    std::cin.getline(str,100);
+    sscanf(str,"%d %d %d",&d,&m,&y);
+    output = addDays(d,m,y,5);
+    printf("%d-%d-%d\n",output.m,output.d,output.y);
 }
- 
