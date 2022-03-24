@@ -19,7 +19,7 @@ int main()
     for (int i = 0; i < n; i++) {
         std::cin.getline(input, MAX_SIZE);
         int count = 0;
-        char p[MAX_SIZE];
+        char* p = (char*)alloca(MAX_SIZE*sizeof(char));
         strcpy(p, input);
         for (; ; p = strstr(toLower(p) + strlen(substr), toLower(substr)))
             count++;

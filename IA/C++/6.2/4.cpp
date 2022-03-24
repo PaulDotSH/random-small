@@ -1,43 +1,29 @@
 #include <iostream>
-#include <string>
+#include <cmath>
+#include <cstring>
 
-//std string& cause we don't want a copy, and we modify it
-void lower(std::string& str) {
-    for (int i = 0; i < str.length(); i++)
-        str[i] = std::tolower(str[i]);
+#define MAX_SIZE 256
+
+char* toLower(char* s) {
+    for (char* p = s; *p; p++)
+		*p = tolower(*p);
+    return s;
 }
 
-//we dont modify the string so let's make it const
-int countSubstring(const std::string& str, const std::string& sub, int maxSearches)
+int main()
 {
-    int count = 0;
-    //from first occurence of the substring, until the offset is not a position (usually -1)
-    //find the substring from the offset
-    for (size_t offset = str.find(sub); offset != std::string::npos;
-         offset = str.find(sub, offset + sub.length()))
-    {
-        count++;
-        if (count>maxSearches)
-            return count;
-    }
-    return count;
-}
+    char substr[MAX_SIZE], input[MAX_SIZE];
+    int n;
+    std::cin >> substr >> n;
+    std::cin.get();
 
-int main() {
-    char substr[50];
-    int x;
-    std::cin.getline(substr,50);
-    std::cin>>x;
-    std::cin.ignore();
-    std::string input;
-    for (int i=0; i<x; i++) {
-        getline(std::cin,input);
-        std::string lwr = input;
-        lower(lwr);
-        if (countSubstring(lwr,substr,2)==2) {
-            std::cout << input << std::endl;
-        }
+    for (int i = 0; i != n; i++) {
+        std::cin.getline(input, MAX_SIZE);
+        int count = 0;
+        char* p = (char*)alloca(MAX_SIZE*sizeof(char));
+
+        for (strcpy(p, input); p; p = strstr(toLower(p) + strlen(substr), toLower(substr)))
+            count++;
+        if (count > 1) std::cout << input << std::endl;
     }
-    return 0;
 }
- 
