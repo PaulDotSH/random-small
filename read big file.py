@@ -1,4 +1,4 @@
-f = open('pornhub.com-db.csv', 'r') 
+f = open('filetxt', 'r') 
 for line in f:
 	print(line)
 	a = input()
